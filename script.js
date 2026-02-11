@@ -10,11 +10,11 @@ function addMessage(text, sender) {
   message.textContent = text;
 
   chat.appendChild(message);
-  chat.scrollTop = chat.scrollHeight;
+  chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
 }
 
 async function sendMessage(userMessage) {
-  const response = await fetch("http://localhost:3000/chat", {
+  const response = await fetch("https://photoncoreai.onrender.com/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -27,7 +27,7 @@ async function sendMessage(userMessage) {
   }
 
   const data = await response.json();
-  return data.reply;
+  return data.reply.trim();
 }
 
 form.addEventListener("submit", async (e) => {
