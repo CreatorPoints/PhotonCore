@@ -173,13 +173,13 @@ const state = {
     aiMessages: [],
     aiQueryCount: 0,
     currentFilter: 'all',
-    basePath: '/PhotonCore',
     selectedModel: 'gpt-4o',
     memories: [],
     chatSessions: [],
     currentChatId: null,
     currentChatMessages: [],
-    tipDismissed: false
+    tipDismissed: false,
+    filesReady: false
 };
 
 // ========================================
@@ -331,8 +331,21 @@ async function initAppData() {
 }
 
 async function ensureBaseFolder() {
-    try { await puter.fs.mkdir(state.basePath, { createMissingParents: true }); } catch (e) {}
-    try { await puter.fs.mkdir(state.basePath + '/files', { createMissingParents: true }); } catch (e) {}
+    // Puter filesystem — use puter.fs.mkdir with dedupeName false
+    // Folders are created under the user's home directory
+    try {
+        await puter.fs.mkdir('PhotonCore', { dedupeName: false });
+    } catch (e) {
+        // Folder exists or other error — safe to ignore
+    }
+
+    try {
+        await puter.fs.mkdir('PhotonCore/files', { dedupeName: false });
+    } catch (e) {
+        // Folder exists — safe to ignore
+    }
+
+    state.filesReady = true;
 }
 
 // ========================================
@@ -439,7 +452,6 @@ function extractMemory(message) {
     const lower = message.toLowerCase();
     if (!lower.includes('remember')) return null;
 
-    // Extract content after "remember"
     const patterns = [
         /remember\s+that\s+(.+)/i,
         /remember\s*:\s*(.+)/i,
@@ -508,7 +520,6 @@ dom.btnClearMemory.addEventListener('click', async () => {
     showToast('All memories cleared.', 'info');
 });
 
-// Tip dismiss
 function loadTipState() {
     puter.kv.get('photon_tip_dismissed').then(val => {
         if (val === 'true') {
@@ -530,11 +541,9 @@ async function loadChatSessions() {
         const data = await puter.kv.get('photon_chat_sessions');
         state.chatSessions = data ? JSON.parse(data) : [];
         renderChatHistory();
-        // Start a new chat if none active
         if (state.chatSessions.length === 0) {
             createNewChat();
         } else {
-            // Load the most recent chat
             loadChat(state.chatSessions[0].id);
         }
     } catch (e) {
@@ -573,16 +582,12 @@ function createNewChat() {
 function loadChat(chatId) {
     const chat = state.chatSessions.find(c => c.id === chatId);
     if (!chat) return;
-
     state.currentChatId = chatId;
     state.currentChatMessages = chat.messages || [];
     clearChatUI();
-
-    // Replay messages
     chat.messages.forEach(msg => {
-        appendAiMessage(msg.text, msg.sender, msg.modelName, msg.author, false);
+        appendAiMessage(msg.text, msg.sender, msg.modelName, msg.author, false, msg.memorySaved || false);
     });
-
     renderChatHistory();
 }
 
@@ -592,15 +597,12 @@ async function saveCurrentChat() {
     chat.messages = state.currentChatMessages;
     chat.updatedAt = new Date().toISOString();
     chat.model = state.selectedModel;
-
-    // Auto-title from first user message
     if (chat.title === 'New Chat' && state.currentChatMessages.length > 0) {
         const firstUserMsg = state.currentChatMessages.find(m => m.sender === 'user');
         if (firstUserMsg) {
             chat.title = firstUserMsg.text.substring(0, 50) + (firstUserMsg.text.length > 50 ? '...' : '');
         }
     }
-
     await saveChatSessions();
     renderChatHistory();
 }
@@ -609,7 +611,6 @@ async function deleteChat(chatId) {
     if (!confirm('Delete this chat?')) return;
     state.chatSessions = state.chatSessions.filter(c => c.id !== chatId);
     await saveChatSessions();
-
     if (state.currentChatId === chatId) {
         if (state.chatSessions.length > 0) {
             loadChat(state.chatSessions[0].id);
@@ -624,12 +625,8 @@ async function deleteChat(chatId) {
 function cleanOldChats() {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
     const before = state.chatSessions.length;
-    state.chatSessions = state.chatSessions.filter(c => {
-        return new Date(c.createdAt) > thirtyDaysAgo;
-    });
-
+    state.chatSessions = state.chatSessions.filter(c => new Date(c.createdAt) > thirtyDaysAgo);
     const removed = before - state.chatSessions.length;
     if (removed > 0) {
         saveChatSessions();
@@ -643,7 +640,6 @@ function renderChatHistory() {
         dom.chatHistoryList.innerHTML = '<div class="empty-state small"><p>No previous chats</p></div>';
         return;
     }
-
     dom.chatHistoryList.innerHTML = state.chatSessions.map(c => {
         const isActive = c.id === state.currentChatId;
         const modelData = AI_MODELS[c.model];
@@ -684,12 +680,10 @@ async function postDiscussion() {
     const title = dom.discussionTitle.value.trim();
     const body = dom.discussionBody.value.trim();
     const category = dom.discussionCategory.value;
-
     if (!title || !body) {
         showToast('Please fill in both title and body.', 'error');
         return;
     }
-
     const discussion = {
         id: Date.now().toString(),
         title, body, category,
@@ -697,14 +691,12 @@ async function postDiscussion() {
         timestamp: new Date().toISOString(),
         likes: 0
     };
-
     try {
         let discussions = [];
         try {
             const data = await puter.kv.get('photon_discussions');
             if (data) discussions = JSON.parse(data);
         } catch (e) {}
-
         discussions.unshift(discussion);
         await puter.kv.set('photon_discussions', JSON.stringify(discussions));
         addActivity(`💬 ${discussion.author} posted: "${title}"`);
@@ -730,7 +722,6 @@ function renderDiscussions() {
     const filtered = state.currentFilter === 'all'
         ? state.discussions
         : state.discussions.filter(d => d.category === state.currentFilter);
-
     if (filtered.length === 0) {
         dom.discussionsList.innerHTML = `
             <div class="empty-state">
@@ -739,12 +730,10 @@ function renderDiscussions() {
             </div>`;
         return;
     }
-
     const categoryLabels = {
         general: '💭 General', 'game-design': '🎮 Game Design',
         art: '🎨 Art', code: '💻 Code', marketing: '📢 Marketing', bugs: '🐛 Bugs'
     };
-
     dom.discussionsList.innerHTML = filtered.map(d => `
         <div class="discussion-post" data-id="${d.id}">
             <div class="discussion-post-header">
@@ -793,7 +782,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 });
 
 // ========================================
-// FILES
+// FILES (Fixed Puter.js Paths)
 // ========================================
 dom.btnBrowse.addEventListener('click', () => dom.fileInput.click());
 dom.uploadZone.addEventListener('click', (e) => {
@@ -811,14 +800,22 @@ dom.fileInput.addEventListener('change', (e) => uploadFiles(e.target.files));
 
 async function uploadFiles(fileList) {
     if (!fileList || fileList.length === 0) return;
+
+    // Make sure folder exists before uploading
+    if (!state.filesReady) {
+        await ensureBaseFolder();
+    }
+
     for (const file of fileList) {
         try {
             showToast(`Uploading ${file.name}...`, 'info');
-            await puter.fs.write(`${state.basePath}/files/${file.name}`, file);
+            // Use puter.fs.write — writes to user's home/PhotonCore/files/
+            await puter.fs.write(`PhotonCore/files/${file.name}`, file, { dedupeName: false, overwrite: true });
             addActivity(`📁 ${state.user?.username} uploaded: ${file.name}`);
             showToast(`${file.name} uploaded! 📁`, 'success');
         } catch (e) {
             showToast(`Failed to upload ${file.name}`, 'error');
+            console.error('Upload error:', e);
         }
     }
     loadFiles();
@@ -829,25 +826,33 @@ dom.btnRefreshFiles.addEventListener('click', loadFiles);
 
 dom.btnNewFolder.addEventListener('click', async () => {
     const name = prompt('Folder name:');
-    if (!name) return;
+    if (!name || !name.trim()) return;
     try {
-        await puter.fs.mkdir(`${state.basePath}/files/${name}`);
+        await puter.fs.mkdir(`PhotonCore/files/${name.trim()}`, { dedupeName: false });
         showToast(`Folder "${name}" created! 📂`, 'success');
         loadFiles();
     } catch (e) {
         showToast('Failed to create folder.', 'error');
+        console.error('Mkdir error:', e);
     }
 });
 
 async function loadFiles() {
     try {
-        const items = await puter.fs.readdir(`${state.basePath}/files`);
+        const items = await puter.fs.readdir('PhotonCore/files');
         state.files = items || [];
         renderFiles();
         dom.statFiles.textContent = state.files.length;
     } catch (e) {
+        // If folder doesn't exist yet, show empty
         state.files = [];
         renderFiles();
+        dom.statFiles.textContent = 0;
+
+        // Try to create the folder for next time
+        if (!state.filesReady) {
+            await ensureBaseFolder();
+        }
     }
 }
 
@@ -860,18 +865,18 @@ function renderFiles() {
             </div>`;
         return;
     }
-
     dom.filesList.innerHTML = state.files.map(f => {
         const icon = getFileIcon(f.name, f.is_dir);
         const size = f.is_dir ? 'Folder' : formatFileSize(f.size);
+        const safeName = escapeHtml(f.name).replace(/'/g, "\\'");
         return `
             <div class="file-card">
                 <div class="file-icon">${icon}</div>
                 <div class="file-name">${escapeHtml(f.name)}</div>
                 <div class="file-size">${size}</div>
                 <div class="file-actions">
-                    ${!f.is_dir ? `<button class="file-action-btn" onclick="downloadFile('${escapeHtml(f.name)}')">⬇️</button>` : ''}
-                    <button class="file-action-btn danger" onclick="deleteFile('${escapeHtml(f.name)}', ${f.is_dir})">🗑️</button>
+                    ${!f.is_dir ? `<button class="file-action-btn" onclick="downloadFile('${safeName}')">⬇️</button>` : ''}
+                    <button class="file-action-btn danger" onclick="deleteFile('${safeName}', ${f.is_dir})">🗑️</button>
                 </div>
             </div>
         `;
@@ -880,25 +885,31 @@ function renderFiles() {
 
 async function downloadFile(name) {
     try {
-        const file = await puter.fs.read(`${state.basePath}/files/${name}`);
-        const url = URL.createObjectURL(file);
+        const blob = await puter.fs.read(`PhotonCore/files/${name}`);
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; a.download = name; a.click();
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
         showToast(`Downloading ${name}...`, 'info');
     } catch (e) {
         showToast('Failed to download file.', 'error');
+        console.error('Download error:', e);
     }
 }
 
 async function deleteFile(name, isDir) {
     if (!confirm(`Delete "${name}"?`)) return;
     try {
-        await puter.fs.delete(`${state.basePath}/files/${name}`, { recursive: isDir });
+        await puter.fs.delete(`PhotonCore/files/${name}`, { recursive: isDir });
         showToast(`"${name}" deleted.`, 'info');
         loadFiles();
     } catch (e) {
         showToast('Failed to delete.', 'error');
+        console.error('Delete error:', e);
     }
 }
 
@@ -950,13 +961,12 @@ async function sendAiMessage() {
     // Check for memory keyword
     const memoryContent = extractMemory(message);
     let memorySaved = false;
-
     if (memoryContent) {
         await addMemory(memoryContent, username);
         memorySaved = true;
     }
 
-    // Add user message to UI and state
+    // Add user message
     const userMsg = {
         text: message,
         sender: 'user',
@@ -969,7 +979,7 @@ async function sendAiMessage() {
     appendAiMessage(message, 'user', '', username, true, memorySaved);
     dom.aiInput.value = '';
 
-    // Show typing indicator
+    // Show typing
     dom.typingIndicator.classList.remove('hidden');
     dom.typingUser.textContent = modelName;
     dom.aiSendText.classList.add('hidden');
@@ -977,11 +987,9 @@ async function sendAiMessage() {
     dom.btnAiSend.disabled = true;
 
     try {
-        // Build context with memory
         const memoryContext = getMemoryContext();
         const systemPrompt = `You are a helpful AI assistant for Photon Studios, an indie game development team of 6 members. Be friendly, creative, and helpful. You are in a group chat where all team members can see the conversation.${memoryContext}`;
 
-        // Build conversation history for context
         const conversationHistory = state.currentChatMessages
             .filter(m => m.sender === 'user' || m.sender === 'ai')
             .slice(-10)
@@ -990,7 +998,6 @@ async function sendAiMessage() {
                 content: m.sender === 'user' ? `[${m.author}]: ${m.text}` : m.text
             }));
 
-        // Remove last message (current one) since we'll send it directly
         const history = conversationHistory.slice(0, -1);
 
         const messages = [
@@ -999,10 +1006,7 @@ async function sendAiMessage() {
             { role: 'user', content: `[${username}]: ${message}` }
         ];
 
-        const response = await puter.ai.chat(messages, {
-            model: modelId
-        });
-
+        const response = await puter.ai.chat(messages, { model: modelId });
         const aiText = response?.message?.content || response?.toString() || 'Sorry, I could not generate a response.';
 
         const aiMsg = {
@@ -1019,17 +1023,15 @@ async function sendAiMessage() {
         dom.statAi.textContent = state.aiQueryCount;
         await puter.kv.set('photon_ai_count', state.aiQueryCount.toString());
         addActivity(`🤖 ${username} chatted with ${modelName}`);
-
         await saveCurrentChat();
 
     } catch (e) {
         const errorMsg = `Sorry, something went wrong with ${modelName}. The model might not be available. Try a different one!`;
         appendAiMessage(errorMsg, 'ai', modelName, modelName, true);
         showToast(`AI request failed with ${modelName}.`, 'error');
-        console.error(e);
+        console.error('AI error:', e);
     }
 
-    // Hide typing indicator
     dom.typingIndicator.classList.add('hidden');
     dom.aiSendText.classList.remove('hidden');
     dom.aiLoading.classList.add('hidden');
@@ -1053,11 +1055,9 @@ function appendAiMessage(text, sender, modelName = '', author = '', save = true,
     const modelTag = sender === 'ai' && modelName
         ? `<span class="ai-model-tag">${modelData?.logo || '⚡'} ${modelName}</span>`
         : '';
-
     const authorTag = author
         ? `<div class="ai-message-author">${sender === 'user' ? '👤 ' : ''}${escapeHtml(author)}</div>`
         : '';
-
     const memoryTag = memorySaved
         ? `<span class="memory-saved-indicator">🧠 Memory saved</span>`
         : '';
@@ -1107,9 +1107,7 @@ function renderMembers(members) {
         { name: 'Member 5', role: 'Sound', status: 'Making music 🎵' },
         { name: 'Member 6', role: 'Writer', status: 'Crafting stories ✍️' }
     ];
-
     const displayMembers = defaultMembers.map((def, i) => members[i] || def);
-
     dom.membersGrid.innerHTML = displayMembers.map(m => `
         <div class="member-card">
             <div class="member-avatar">${(m.name || '?').substring(0, 2).toUpperCase()}</div>
