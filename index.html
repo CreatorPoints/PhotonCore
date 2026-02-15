@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photon Core — Photon Studios Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://js.puter.com/v2/"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <div class="logo-icon">⚡</div>
+                <h1>Photon Core</h1>
+                <p>Photon Studios Internal Hub</p>
+            </div>
+            <button id="btn-sign-in" class="btn btn-primary btn-large">
+                Sign In with Puter
+            </button>
+            <p class="auth-note">Authorized members only — Photon Studios</p>
+        </div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="app hidden">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-small">⚡</div>
+                <span class="logo-text">Photon Core</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-tab="dashboard">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-label">Dashboard</span>
+                </button>
+                <button class="nav-item" data-tab="discussions">
+                    <span class="nav-icon">💬</span>
+                    <span class="nav-label">Discussions</span>
+                </button>
+                <button class="nav-item" data-tab="files">
+                    <span class="nav-icon">📁</span>
+                    <span class="nav-label">Files</span>
+                </button>
+                <button class="nav-item" data-tab="ai">
+                    <span class="nav-icon">🤖</span>
+                    <span class="nav-label">AI Assistant</span>
+                </button>
+                <button class="nav-item" data-tab="members">
+                    <span class="nav-icon">👥</span>
+                    <span class="nav-label">Members</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">?</div>
+                    <div class="user-details">
+                        <span class="user-name" id="user-name">Loading...</span>
+                        <span class="user-role">Member</span>
+                    </div>
+                </div>
+                <button id="btn-sign-out" class="btn-icon" title="Sign Out">🚪</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <button id="mobile-menu-btn" class="btn-icon mobile-only">☰</button>
+                    <h2 id="page-title">Dashboard</h2>
+                </div>
+                <div class="header-right">
+                    <div class="status-indicator">
+                        <span class="status-dot online"></span>
+                        <span>Online</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Tab Contents -->
+            <div class="content-area">
+
+                <!-- Dashboard Tab -->
+                <section id="tab-dashboard" class="tab-content active">
+                    <div class="welcome-banner">
+                        <div class="welcome-text">
+                            <h2>Welcome back, <span id="welcome-name">Member</span>! 👋</h2>
+                            <p>Here's what's happening at Photon Studios today.</p>
+                        </div>
+                        <div class="welcome-art">⚡</div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">💬</div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="stat-discussions">0</span>
+                                <span class="stat-label">Discussions</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📁</div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="stat-files">0</span>
+                                <span class="stat-label">Files Stored</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🤖</div>
+                            <div class="stat-info">
+                                <span class="stat-number" id="stat-ai">0</span>
+                                <span class="stat-label">AI Queries</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">👥</div>
+                            <div class="stat-info">
+                                <span class="stat-number">6</span>
+                                <span class="stat-label">Team Members</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <h3>📌 Quick Actions</h3>
+                            <div class="quick-actions">
+                                <button class="quick-btn" onclick="switchTab('discussions')">New Discussion</button>
+                                <button class="quick-btn" onclick="switchTab('files')">Upload File</button>
+                                <button class="quick-btn" onclick="switchTab('ai')">Ask AI</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3>🕒 Recent Activity</h3>
+                            <div id="recent-activity" class="activity-list">
+                                <p class="empty-state">No recent activity yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Discussions Tab -->
+                <section id="tab-discussions" class="tab-content">
+                    <div class="tab-header">
+                        <h2>💬 Discussions</h2>
+                        <p>Talk about games, ideas, projects — anything Photon Studios.</p>
+                    </div>
+
+                    <div class="discussion-container">
+                        <div class="discussion-input-area">
+                            <div class="discussion-compose">
+                                <input type="text" id="discussion-title" placeholder="Topic title (e.g., 'New game mechanic idea')" class="input">
+                                <textarea id="discussion-body" placeholder="Share your thoughts with the team..." class="textarea" rows="3"></textarea>
+                                <div class="compose-actions">
+                                    <select id="discussion-category" class="select">
+                                        <option value="general">💭 General</option>
+                                        <option value="game-design">🎮 Game Design</option>
+                                        <option value="art">🎨 Art & Assets</option>
+                                        <option value="code">💻 Code & Tech</option>
+                                        <option value="marketing">📢 Marketing</option>
+                                        <option value="bugs">🐛 Bugs & Issues</option>
+                                    </select>
+                                    <button id="btn-post-discussion" class="btn btn-primary">Post Discussion</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="discussion-filters">
+                            <button class="filter-btn active" data-filter="all">All</button>
+                            <button class="filter-btn" data-filter="general">💭 General</button>
+                            <button class="filter-btn" data-filter="game-design">🎮 Game Design</button>
+                            <button class="filter-btn" data-filter="art">🎨 Art</button>
+                            <button class="filter-btn" data-filter="code">💻 Code</button>
+                            <button class="filter-btn" data-filter="bugs">🐛 Bugs</button>
+                        </div>
+
+                        <div id="discussions-list" class="discussions-list">
+                            <div class="empty-state">
+                                <span class="empty-icon">💬</span>
+                                <p>No discussions yet. Start the conversation!</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Files Tab -->
+                <section id="tab-files" class="tab-content">
+                    <div class="tab-header">
+                        <h2>📁 File Storage</h2>
+                        <p>Upload, manage, and share files with the team.</p>
+                    </div>
+
+                    <div class="files-container">
+                        <div class="upload-zone" id="upload-zone">
+                            <div class="upload-icon">📤</div>
+                            <h3>Drop files here or click to upload</h3>
+                            <p>Store game assets, documents, images & more</p>
+                            <input type="file" id="file-input" multiple hidden>
+                            <button id="btn-browse" class="btn btn-primary">Browse Files</button>
+                        </div>
+
+                        <div class="files-toolbar">
+                            <div class="files-path">
+                                <span>📂</span>
+                                <span id="current-path">/PhotonCore</span>
+                            </div>
+                            <div class="files-actions">
+                                <button id="btn-new-folder" class="btn btn-secondary">📁 New Folder</button>
+                                <button id="btn-refresh-files" class="btn btn-secondary">🔄 Refresh</button>
+                            </div>
+                        </div>
+
+                        <div id="files-list" class="files-grid">
+                            <div class="empty-state">
+                                <span class="empty-icon">📂</span>
+                                <p>No files yet. Upload something!</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- AI Tab -->
+                <section id="tab-ai" class="tab-content">
+                    <div class="tab-header">
+                        <h2>🤖 AI Assistant</h2>
+                        <p>Generate ideas, content, code — powered by AI through Puter.</p>
+                    </div>
+
+                    <div class="ai-container">
+                        <div class="ai-presets">
+                            <button class="preset-btn" data-prompt="Generate a unique game concept for an indie studio">🎮 Game Idea</button>
+                            <button class="preset-btn" data-prompt="Write a compelling game description for a store page">📝 Store Description</button>
+                            <button class="preset-btn" data-prompt="Suggest 10 creative game names for a new project">💡 Game Names</button>
+                            <button class="preset-btn" data-prompt="Create a game design document outline">📄 GDD Outline</button>
+                            <button class="preset-btn" data-prompt="Write dialogue for an NPC character in a fantasy RPG">🗣️ NPC Dialogue</button>
+                            <button class="preset-btn" data-prompt="Suggest a color palette and art style for a 2D platformer">🎨 Art Direction</button>
+                        </div>
+
+                        <div class="ai-chat" id="ai-chat">
+                            <div class="ai-message ai-welcome">
+                                <div class="ai-avatar">🤖</div>
+                                <div class="ai-bubble">
+                                    <p>Hey Photon Studios! I'm your AI assistant. Ask me anything — game ideas, writing, code, design concepts, or anything else you need help with!</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ai-input-area">
+                            <textarea id="ai-input" placeholder="Ask the AI anything..." class="textarea" rows="2"></textarea>
+                            <button id="btn-ai-send" class="btn btn-primary">
+                                <span id="ai-send-text">Send ⚡</span>
+                                <span id="ai-loading" class="hidden">Thinking...</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Members Tab -->
+                <section id="tab-members" class="tab-content">
+                    <div class="tab-header">
+                        <h2>👥 Team Members</h2>
+                        <p>The Photon Studios crew — 6 strong.</p>
+                    </div>
+
+                    <div class="members-grid" id="members-grid">
+                        <!-- Members will be loaded here -->
+                    </div>
+
+                    <div class="card member-settings">
+                        <h3>⚙️ Your Profile</h3>
+                        <div class="profile-form">
+                            <div class="form-group">
+                                <label>Display Name</label>
+                                <input type="text" id="profile-name" class="input" placeholder="Your display name">
+                            </div>
+                            <div class="form-group">
+                                <label>Role</label>
+                                <select id="profile-role" class="select">
+                                    <option value="Developer">💻 Developer</option>
+                                    <option value="Artist">🎨 Artist</option>
+                                    <option value="Designer">🎮 Game Designer</option>
+                                    <option value="Sound">🎵 Sound Designer</option>
+                                    <option value="Writer">✍️ Writer</option>
+                                    <option value="Producer">📋 Producer</option>
+                                    <option value="Lead">⭐ Team Lead</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Status</label>
+                                <input type="text" id="profile-status" class="input" placeholder="What are you working on?">
+                            </div>
+                            <button id="btn-save-profile" class="btn btn-primary">Save Profile</button>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
