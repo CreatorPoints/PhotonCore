@@ -34,13 +34,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Sidebar Navigation — <a> tags just navigate via href naturally
+    // Sidebar Navigation
+    // ONLY attach switchTab to <button> nav items (old single-page mode)
+    // <a> nav items just work naturally via href — NO interference
     document.querySelectorAll('.nav-item').forEach(i => {
-        i.addEventListener('click', (e) => {
-            if (i.tagName === 'A' && i.getAttribute('href')) return;
-            e.preventDefault();
-            switchTab(i.dataset.tab);
-        });
+        if (i.tagName.toUpperCase() === 'BUTTON') {
+            i.addEventListener('click', () => switchTab(i.dataset.tab));
+        }
+        // <a> tags — do nothing, let browser handle href
     });
 
     // Mobile Menu
