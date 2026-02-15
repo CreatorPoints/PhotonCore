@@ -13,32 +13,36 @@ document.addEventListener('DOMContentLoaded', () => {
         dom.btnSignIn.addEventListener('click', async () => {
             try {
                 await puter.auth.signIn();
-                handleSignIn(await puter.auth.getUser());
+                const u = await puter.auth.getUser();
+                if (u) handleSignIn(u);
             } catch (e) {
                 showToast('Failed.', 'error');
             }
         });
     }
 
-    // Sign Out
+    // Sign Out — redirect to index.html
     if (dom.btnSignOut) {
         dom.btnSignOut.addEventListener('click', async () => {
             const uid = state.user?.username;
-            if (uid) rtdb.ref('presence/' + uid).set({ online: false, lastSeen: firebase.database.ServerValue.TIMESTAMP });
+            if (uid) {
+                rtdb.ref('presence/' + uid).set({
+                    online: false,
+                    lastSeen: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
             try { await puter.auth.signOut(); } catch (e) {}
             state.user = null;
-            if (dom.app) dom.app.classList.add('hidden');
-            if (dom.authScreen) dom.authScreen.classList.remove('hidden');
-            showToast('Signed out.', 'info');
+            window.location.href = 'index.html';
         });
     }
 
-    // Sidebar Navigation (works for both <button> and <a> with data-tab)
+    // Sidebar Navigation — supports both <a> links and <button> tabs
     document.querySelectorAll('.nav-item').forEach(i => {
         i.addEventListener('click', (e) => {
-            // If it's an <a> tag linking to another page, let it navigate
+            // If it's an <a> tag linking to another page, let browser navigate
             if (i.tagName === 'A' && i.getAttribute('href')) return;
-            // Otherwise handle as tab switch
+            // Otherwise handle as tab switch (backward compat)
             e.preventDefault();
             switchTab(i.dataset.tab);
         });
@@ -99,29 +103,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Chat
+    // New Chat
     if (dom.btnNewChat) dom.btnNewChat.addEventListener('click', createNewChat);
+
+    // AI Send
     if (dom.btnAiSend) dom.btnAiSend.addEventListener('click', sendAiMessage);
+
+    // AI Input Enter Key
     if (dom.aiInput) {
         dom.aiInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAiMessage(); }
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAiMessage();
+            }
         });
     }
 
-    // Presets
+    // AI Presets
     document.querySelectorAll('.preset-btn').forEach(b => {
         b.addEventListener('click', () => {
-            if (dom.aiInput) { dom.aiInput.value = b.dataset.prompt; sendAiMessage(); }
+            if (dom.aiInput) {
+                dom.aiInput.value = b.dataset.prompt;
+                sendAiMessage();
+            }
         });
     });
 
-    // File Attach (AI)
+    // AI File Attach
     if (dom.btnAiAttach) dom.btnAiAttach.addEventListener('click', () => dom.aiFileInput?.click());
     if (dom.aiFileInput) dom.aiFileInput.addEventListener('change', handleFileAttach);
     if (dom.btnRemoveAttachment) dom.btnRemoveAttachment.addEventListener('click', clearAttachment);
 
-    // Discussions
+    // Post Discussion
     if (dom.btnPostDiscussion) dom.btnPostDiscussion.addEventListener('click', postDiscussion);
+
+    // Discussion Filters
     document.querySelectorAll('.filter-btn').forEach(b => {
         b.addEventListener('click', () => {
             document.querySelectorAll('.filter-btn').forEach(x => x.classList.remove('active'));
@@ -131,8 +147,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Files
+    // File Browse Button
     if (dom.btnBrowse) dom.btnBrowse.addEventListener('click', () => dom.fileInput?.click());
+
+    // Upload Zone
     if (dom.uploadZone) {
         dom.uploadZone.addEventListener('click', e => {
             if (e.target !== dom.btnBrowse) dom.fileInput?.click();
@@ -148,8 +166,14 @@ document.addEventListener('DOMContentLoaded', () => {
             uploadFiles(e.dataTransfer.files);
         });
     }
+
+    // File Input Change
     if (dom.fileInput) dom.fileInput.addEventListener('change', e => uploadFiles(e.target.files));
+
+    // Refresh Files
     if (dom.btnRefreshFiles) dom.btnRefreshFiles.addEventListener('click', loadFiles);
+
+    // New Folder
     if (dom.btnNewFolder) {
         dom.btnNewFolder.addEventListener('click', async () => {
             const n = prompt('Folder name:');
@@ -164,6 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Profile
+    // Save Profile
     if (dom.btnSaveProfile) dom.btnSaveProfile.addEventListener('click', saveProfile);
 });
