@@ -8,28 +8,25 @@ document.addEventListener('DOMContentLoaded', () => {
     createParticles();
     initAuth();
 
-    // Sign In
+    // Sign In — direct href redirect
     if (dom.btnSignIn) {
-        dom.btnSignIn.addEventListener('click', async () => {
-            try {
-                await puter.auth.signIn();
-                const u = await puter.auth.getUser();
-                if (u) handleSignIn(u);
-            } catch (e) {
-                showToast('Failed.', 'error');
-            }
+        dom.btnSignIn.addEventListener('click', () => {
+            sessionStorage.setItem('photon_just_signed_in', 'true');
+            handleSignIn();
         });
     }
 
-    // Sign Out — redirect to index.html
+    // Sign Out — direct href redirect
     if (dom.btnSignOut) {
         dom.btnSignOut.addEventListener('click', async () => {
             const uid = state.user?.username;
             if (uid) {
-                rtdb.ref('presence/' + uid).set({
-                    online: false,
-                    lastSeen: firebase.database.ServerValue.TIMESTAMP
-                });
+                try {
+                    rtdb.ref('presence/' + uid).set({
+                        online: false,
+                        lastSeen: firebase.database.ServerValue.TIMESTAMP
+                    });
+                } catch (e) {}
             }
             try { await puter.auth.signOut(); } catch (e) {}
             state.user = null;
@@ -37,12 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Sidebar Navigation — supports both <a> links and <button> tabs
+    // Sidebar Navigation — <a> tags just navigate via href naturally
     document.querySelectorAll('.nav-item').forEach(i => {
         i.addEventListener('click', (e) => {
-            // If it's an <a> tag linking to another page, let browser navigate
             if (i.tagName === 'A' && i.getAttribute('href')) return;
-            // Otherwise handle as tab switch (backward compat)
             e.preventDefault();
             switchTab(i.dataset.tab);
         });
@@ -147,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // File Browse Button
+    // File Browse
     if (dom.btnBrowse) dom.btnBrowse.addEventListener('click', () => dom.fileInput?.click());
 
     // Upload Zone
@@ -167,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // File Input Change
+    // File Input
     if (dom.fileInput) dom.fileInput.addEventListener('change', e => uploadFiles(e.target.files));
 
     // Refresh Files

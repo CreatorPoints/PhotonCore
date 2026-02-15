@@ -3,7 +3,6 @@
    Puter Authentication + Page Redirect
    ======================================== */
 
-// Detect which page we're on
 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 const isAuthPage = (currentPage === 'index.html' || currentPage === '');
 const appPages = ['dashboard.html', 'discussions.html', 'files.html', 'ai.html', 'members.html'];
@@ -13,43 +12,54 @@ async function initAuth() {
     try {
         const u = await puter.auth.getUser();
         if (u) {
-            handleSignIn(u);
-        } else {
-            // Not logged in — if on an app page, kick back to login
-            if (isAppPage) {
-                window.location.href = 'index.html';
+            // User is already logged in
+            if (isAuthPage) {
+                // On login page but already signed in — go to dashboard
+                window.location.href = 'dashboard.html';
+                return;
             }
+            // On an app page — populate UI
+            onAppPageReady(u);
+        } else {
+            // Not logged in
+            if (isAppPage) {
+                // Trying to access app page without auth — kick to login
+                window.location.href = 'index.html';
+                return;
+            }
+            // On auth page, not logged in — do nothing, show login screen
         }
     } catch (e) {
-        // Auth check failed — if on app page, go to login
         if (isAppPage) {
             window.location.href = 'index.html';
+            return;
         }
     }
 }
 
-function handleSignIn(user) {
+async function handleSignIn() {
+    try {
+        await puter.auth.signIn();
+        // After sign in succeeds, just redirect immediately
+        window.location.href = 'dashboard.html';
+    } catch (e) {
+        showToast('Sign in failed.', 'error');
+    }
+}
+
+function onAppPageReady(user) {
     state.user = user;
     const n = user.username || 'Member';
 
-    // If we're on the AUTH page → redirect to dashboard
-    if (isAuthPage) {
-        // Store a flag so dashboard knows to show welcome toast
-        sessionStorage.setItem('photon_just_signed_in', n);
-        window.location.href = 'dashboard.html';
-        return; // Stop here — page is redirecting
-    }
-
-    // If we're already on an app page → just populate UI
     if (dom.userName) dom.userName.textContent = n;
     if (dom.userAvatar) dom.userAvatar.textContent = n.substring(0, 2).toUpperCase();
     if (dom.welcomeName) dom.welcomeName.textContent = n;
     if (dom.app) dom.app.classList.remove('hidden');
 
-    // Show welcome toast if just redirected from login
+    // Welcome toast on first load after sign in
     const justSignedIn = sessionStorage.getItem('photon_just_signed_in');
     if (justSignedIn) {
-        showToast('Welcome, ' + justSignedIn + '! ⚡', 'success');
+        showToast('Welcome, ' + n + '! ⚡', 'success');
         sessionStorage.removeItem('photon_just_signed_in');
     }
 
