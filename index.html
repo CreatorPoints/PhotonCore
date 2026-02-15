@@ -73,7 +73,6 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Header -->
             <header class="top-header">
                 <div class="header-left">
                     <button id="mobile-menu-btn" class="btn-icon mobile-only">☰</button>
@@ -87,7 +86,6 @@
                 </div>
             </header>
 
-            <!-- Tab Contents -->
             <div class="content-area">
 
                 <!-- Dashboard Tab -->
@@ -244,9 +242,7 @@
                                 <button id="btn-new-chat" class="btn btn-primary btn-small">+ New Chat</button>
                             </div>
                             <div id="chat-history-list" class="chat-history-list">
-                                <div class="empty-state small">
-                                    <p>No previous chats</p>
-                                </div>
+                                <div class="empty-state small"><p>No previous chats</p></div>
                             </div>
                             <div class="chat-history-footer">
                                 <span class="chat-auto-delete-note">💡 Chats auto-delete after 30 days</span>
@@ -304,11 +300,11 @@
                             </div>
 
                             <!-- Memory Tip Banner -->
-                            <div class="memory-tip-banner">
+                            <div class="memory-tip-banner" id="memory-tip-banner">
                                 <div class="tip-icon">🧠</div>
                                 <div class="tip-content">
                                     <strong>Pro Tip: AI Memory</strong>
-                                    <p>Say <span class="tip-keyword">"remember"</span> in your message to save info to AI memory. Example: <em>"Remember that our game is called StarForge."</em> The AI will recall it in future chats!</p>
+                                    <p>The AI <strong>automatically remembers</strong> important things you tell it — names, deadlines, preferences, game details, and anything that sounds important. You can also say <span class="tip-keyword">"remember"</span> to force-save something.</p>
                                 </div>
                                 <button class="tip-dismiss" id="btn-dismiss-tip">✕</button>
                             </div>
@@ -322,8 +318,7 @@
                                         <button class="btn btn-secondary btn-small btn-danger-text" id="btn-clear-memory">Clear All</button>
                                     </div>
                                 </div>
-                                <div class="memory-list hidden" id="memory-list">
-                                </div>
+                                <div class="memory-list hidden" id="memory-list"></div>
                             </div>
 
                             <!-- Bot Identity Bar -->
@@ -361,13 +356,26 @@
                                     <div class="ai-avatar">🤖</div>
                                     <div class="ai-bubble">
                                         <p>Hey Photon Studios! 👋 I'm your AI assistant. This is a <strong>group chat</strong> — everyone on the team can see and participate.</p>
-                                        <p>💡 <strong>Tip:</strong> Use the word <strong>"remember"</strong> in your message to save important info to my memory. I'll recall it in future conversations!</p>
+                                        <p>📎 You can <strong>attach files</strong> for me to analyze, review, or work with.</p>
+                                        <p>🧠 I <strong>automatically remember</strong> important things you tell me — names, decisions, deadlines, and more!</p>
                                     </div>
                                 </div>
                             </div>
 
+                            <!-- File Attachment Preview -->
+                            <div class="ai-attachment-preview hidden" id="ai-attachment-preview">
+                                <div class="attachment-info">
+                                    <span class="attachment-icon" id="attachment-icon">📎</span>
+                                    <span class="attachment-name" id="attachment-name">file.txt</span>
+                                    <span class="attachment-size" id="attachment-size">0 KB</span>
+                                </div>
+                                <button class="attachment-remove" id="btn-remove-attachment">✕</button>
+                            </div>
+
                             <div class="ai-input-area">
-                                <textarea id="ai-input" placeholder="Ask the AI anything... (use 'remember' to save to memory)" class="textarea" rows="2"></textarea>
+                                <button class="btn-icon ai-attach-btn" id="btn-ai-attach" title="Attach a file">📎</button>
+                                <input type="file" id="ai-file-input" hidden>
+                                <textarea id="ai-input" placeholder="Ask the AI anything... attach files with 📎" class="textarea" rows="2"></textarea>
                                 <button id="btn-ai-send" class="btn btn-primary">
                                     <span id="ai-send-text">Send ⚡</span>
                                     <span id="ai-loading" class="hidden">Thinking...</span>
@@ -384,8 +392,7 @@
                         <p>The Photon Studios crew — 6 strong.</p>
                     </div>
 
-                    <div class="members-grid" id="members-grid">
-                    </div>
+                    <div class="members-grid" id="members-grid"></div>
 
                     <div class="card member-settings">
                         <h3>⚙️ Your Profile</h3>
@@ -419,7 +426,6 @@
         </main>
     </div>
 
-    <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
     <script src="script.js"></script>
