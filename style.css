@@ -947,6 +947,102 @@ body {
 }
 
 /* ========================================
+   AI MODEL SELECTOR
+   ======================================== */
+.ai-model-selector {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.model-selector-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.model-selector-label {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.model-active-badge {
+    padding: 4px 14px;
+    background: var(--accent-gradient);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 10px var(--accent-glow);
+    animation: badgePulse 3s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { box-shadow: 0 2px 10px var(--accent-glow); }
+    50% { box-shadow: 0 2px 20px var(--accent-glow), 0 0 30px var(--accent-glow); }
+}
+
+.model-dropdown {
+    padding: 12px 16px;
+    font-size: 0.88rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.model-dropdown:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.model-dropdown optgroup {
+    color: var(--accent-secondary);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 8px 0;
+}
+
+.model-dropdown option {
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    padding: 8px 12px;
+    font-size: 0.88rem;
+}
+
+.model-info-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--accent-subtle);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--accent-primary);
+    transition: all 0.3s ease;
+}
+
+.model-info-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.model-info-text {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* ========================================
    AI ASSISTANT
    ======================================== */
 .ai-container {
@@ -1038,6 +1134,17 @@ body {
 
 .ai-bubble p:last-child {
     margin-bottom: 0;
+}
+
+.ai-model-tag {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 2px 8px;
+    background: rgba(108, 92, 231, 0.15);
+    border-radius: 10px;
+    font-size: 0.68rem;
+    color: var(--accent-secondary);
+    font-family: var(--font-mono);
 }
 
 .ai-input-area {
@@ -1279,6 +1386,15 @@ body {
     .files-toolbar {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .model-selector-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ai-model-selector {
+        padding: 14px;
     }
 }
 

@@ -4,6 +4,155 @@
    ======================================== */
 
 // ========================================
+// AI MODELS DATABASE
+// ========================================
+const AI_MODELS = {
+    // OpenAI
+    'gpt-4o': {
+        name: 'GPT-4o',
+        provider: 'OpenAI',
+        description: 'Best for general tasks, conversations, content generation, and coding.',
+        badge: 'General Purpose, Fast & Smart'
+    },
+    'gpt-4o-mini': {
+        name: 'GPT-4o Mini',
+        provider: 'OpenAI',
+        description: 'Lightweight and fast. Great for quick questions and simple tasks.',
+        badge: 'Lightweight, Quick Responses'
+    },
+    'gpt-4-turbo': {
+        name: 'GPT-4 Turbo',
+        provider: 'OpenAI',
+        description: 'Advanced reasoning for complex analysis, long documents, and detailed outputs.',
+        badge: 'Advanced Reasoning, Complex Tasks'
+    },
+    'gpt-4': {
+        name: 'GPT-4',
+        provider: 'OpenAI',
+        description: 'Deep analytical thinking. Best for research, detailed explanations, and accuracy.',
+        badge: 'Deep Analysis, Detailed Outputs'
+    },
+    'gpt-3.5-turbo': {
+        name: 'GPT-3.5 Turbo',
+        provider: 'OpenAI',
+        description: 'Fast and cost-effective. Good for drafts, brainstorming, and simple tasks.',
+        badge: 'Fast, Budget-Friendly'
+    },
+    'o3-mini': {
+        name: 'o3-Mini',
+        provider: 'OpenAI',
+        description: 'Specialized in reasoning, math, logic puzzles, and structured problem solving.',
+        badge: 'Reasoning, Math & Logic'
+    },
+
+    // Anthropic
+    'claude-3-5-sonnet': {
+        name: 'Claude 3.5 Sonnet',
+        provider: 'Anthropic',
+        description: 'Excellent at writing, analysis, coding, and nuanced conversations.',
+        badge: 'Writing, Analysis, Code'
+    },
+    'claude-3-opus': {
+        name: 'Claude 3 Opus',
+        provider: 'Anthropic',
+        description: 'Most capable Claude model. Best for complex creative and technical tasks.',
+        badge: 'Most Capable, Complex Tasks'
+    },
+    'claude-3-sonnet': {
+        name: 'Claude 3 Sonnet',
+        provider: 'Anthropic',
+        description: 'Balanced performance for everyday tasks, writing, and coding.',
+        badge: 'Balanced, Versatile'
+    },
+    'claude-3-haiku': {
+        name: 'Claude 3 Haiku',
+        provider: 'Anthropic',
+        description: 'Ultra fast responses. Perfect for quick answers and simple queries.',
+        badge: 'Ultra Fast, Simple Tasks'
+    },
+
+    // Google
+    'gemini-2.0-flash': {
+        name: 'Gemini 2.0 Flash',
+        provider: 'Google',
+        description: 'Fast multimodal model. Great for quick analysis and content generation.',
+        badge: 'Fast, Multimodal'
+    },
+    'gemini-1.5-pro': {
+        name: 'Gemini 1.5 Pro',
+        provider: 'Google',
+        description: 'Long context window. Best for research, document analysis, and deep dives.',
+        badge: 'Long Context, Research'
+    },
+    'gemini-1.5-flash': {
+        name: 'Gemini 1.5 Flash',
+        provider: 'Google',
+        description: 'Quick and efficient for everyday tasks and rapid prototyping.',
+        badge: 'Quick, Efficient'
+    },
+
+    // Meta
+    'llama-3.1-70b': {
+        name: 'LLaMA 3.1 70B',
+        provider: 'Meta',
+        description: 'Powerful open-source model. Great for code generation and text tasks.',
+        badge: 'Open Source, Code & Text'
+    },
+    'llama-3.1-8b': {
+        name: 'LLaMA 3.1 8B',
+        provider: 'Meta',
+        description: 'Lightweight open-source model. Fast responses for simple tasks.',
+        badge: 'Lightweight, Fast'
+    },
+
+    // Mistral
+    'mistral-large': {
+        name: 'Mistral Large',
+        provider: 'Mistral',
+        description: 'Strong reasoning and multilingual capabilities. Good for complex tasks.',
+        badge: 'Reasoning, Multilingual'
+    },
+    'mistral-medium': {
+        name: 'Mistral Medium',
+        provider: 'Mistral',
+        description: 'Balanced performance across reasoning, writing, and coding tasks.',
+        badge: 'Balanced Performance'
+    },
+    'mistral-small': {
+        name: 'Mistral Small',
+        provider: 'Mistral',
+        description: 'Fast and efficient for everyday conversations and quick tasks.',
+        badge: 'Fast, Efficient'
+    },
+    'mixtral-8x7b': {
+        name: 'Mixtral 8x7B',
+        provider: 'Mistral',
+        description: 'Mixture-of-experts model. Excellent at code, math, and open-source tasks.',
+        badge: 'Code, Math, Open Source'
+    },
+
+    // Others
+    'deepseek-chat': {
+        name: 'DeepSeek Chat',
+        provider: 'DeepSeek',
+        description: 'Strong code generation and reasoning. Good for programming tasks.',
+        badge: 'Code Generation, Reasoning'
+    },
+    'deepseek-reasoner': {
+        name: 'DeepSeek Reasoner',
+        provider: 'DeepSeek',
+        description: 'Advanced logical reasoning, math, and step-by-step problem solving.',
+        badge: 'Advanced Logic, Math'
+    },
+    'codellama-70b': {
+        name: 'CodeLlama 70B',
+        provider: 'Meta',
+        description: 'Specialized for code. Best for writing, debugging, and explaining code.',
+        badge: 'Code Specialized'
+    }
+};
+
+// ========================================
 // STATE
 // ========================================
 const state = {
@@ -13,7 +162,8 @@ const state = {
     aiMessages: [],
     aiQueryCount: 0,
     currentFilter: 'all',
-    basePath: '/PhotonCore'
+    basePath: '/PhotonCore',
+    selectedModel: 'gpt-4o'
 };
 
 // ========================================
@@ -57,6 +207,9 @@ const dom = {
     btnAiSend: document.getElementById('btn-ai-send'),
     aiSendText: document.getElementById('ai-send-text'),
     aiLoading: document.getElementById('ai-loading'),
+    aiModelSelect: document.getElementById('ai-model-select'),
+    modelActiveBadge: document.getElementById('model-active-badge'),
+    modelInfoText: document.getElementById('model-info-text'),
 
     // Members
     membersGrid: document.getElementById('members-grid'),
@@ -93,13 +246,11 @@ function showToast(message, type = 'info') {
 // ========================================
 async function initAuth() {
     try {
-        // Check if user is already signed in
         const user = await puter.auth.getUser();
         if (user) {
             handleSignIn(user);
         }
     } catch (e) {
-        // Not signed in — show auth screen
         console.log('User not signed in yet.');
     }
 }
@@ -140,8 +291,6 @@ function handleSignIn(user) {
     dom.app.classList.remove('hidden');
 
     showToast(`Welcome back, ${displayName}! ⚡`, 'success');
-
-    // Initialize app data
     initAppData();
 }
 
@@ -155,14 +304,13 @@ async function initAppData() {
     loadStats();
     loadMembers();
     loadProfile();
+    loadSavedModel();
 }
 
 async function ensureBaseFolder() {
     try {
         await puter.fs.mkdir(state.basePath, { createMissingParents: true });
-    } catch (e) {
-        // Folder might already exist
-    }
+    } catch (e) {}
     try {
         await puter.fs.mkdir(state.basePath + '/files', { createMissingParents: true });
     } catch (e) {}
@@ -187,20 +335,15 @@ document.querySelectorAll('.nav-item').forEach(item => {
 });
 
 function switchTab(tab) {
-    // Update nav
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const activeNav = document.querySelector(`.nav-item[data-tab="${tab}"]`);
     if (activeNav) activeNav.classList.add('active');
 
-    // Update content
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     const activeTab = document.getElementById(`tab-${tab}`);
     if (activeTab) activeTab.classList.add('active');
 
-    // Update title
     dom.pageTitle.textContent = tabTitles[tab] || 'Photon Core';
-
-    // Close mobile sidebar
     closeMobileSidebar();
 }
 
@@ -209,7 +352,6 @@ dom.mobileMenuBtn.addEventListener('click', () => {
     const sidebar = document.querySelector('.sidebar');
     sidebar.classList.toggle('open');
 
-    // Create or toggle overlay
     let overlay = document.querySelector('.sidebar-overlay');
     if (!overlay) {
         overlay = document.createElement('div');
@@ -224,6 +366,39 @@ function closeMobileSidebar() {
     document.querySelector('.sidebar').classList.remove('open');
     const overlay = document.querySelector('.sidebar-overlay');
     if (overlay) overlay.classList.remove('active');
+}
+
+// ========================================
+// AI MODEL SELECTOR
+// ========================================
+dom.aiModelSelect.addEventListener('change', () => {
+    const modelId = dom.aiModelSelect.value;
+    state.selectedModel = modelId;
+
+    const modelData = AI_MODELS[modelId];
+    if (modelData) {
+        dom.modelActiveBadge.textContent = modelData.name;
+        dom.modelInfoText.textContent = modelData.description;
+    }
+
+    // Save preference
+    puter.kv.set('photon_selected_model', modelId).catch(() => {});
+
+    showToast(`Switched to ${modelData?.name || modelId} ✨`, 'success');
+});
+
+async function loadSavedModel() {
+    try {
+        const savedModel = await puter.kv.get('photon_selected_model');
+        if (savedModel && AI_MODELS[savedModel]) {
+            state.selectedModel = savedModel;
+            dom.aiModelSelect.value = savedModel;
+
+            const modelData = AI_MODELS[savedModel];
+            dom.modelActiveBadge.textContent = modelData.name;
+            dom.modelInfoText.textContent = modelData.description;
+        }
+    } catch (e) {}
 }
 
 // ========================================
@@ -252,7 +427,6 @@ async function postDiscussion() {
     };
 
     try {
-        // Load existing discussions
         let discussions = [];
         try {
             const data = await puter.kv.get('photon_discussions');
@@ -262,7 +436,6 @@ async function postDiscussion() {
         discussions.unshift(discussion);
         await puter.kv.set('photon_discussions', JSON.stringify(discussions));
 
-        // Update activity
         addActivity(`💬 ${discussion.author} posted: "${title}"`);
 
         dom.discussionTitle.value = '';
@@ -365,7 +538,6 @@ dom.uploadZone.addEventListener('click', (e) => {
     if (e.target !== dom.btnBrowse) dom.fileInput.click();
 });
 
-// Drag and drop
 dom.uploadZone.addEventListener('dragover', (e) => {
     e.preventDefault();
     dom.uploadZone.classList.add('drag-over');
@@ -378,8 +550,7 @@ dom.uploadZone.addEventListener('dragleave', () => {
 dom.uploadZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dom.uploadZone.classList.remove('drag-over');
-    const files = e.dataTransfer.files;
-    uploadFiles(files);
+    uploadFiles(e.dataTransfer.files);
 });
 
 dom.fileInput.addEventListener('change', (e) => {
@@ -528,6 +699,10 @@ async function sendAiMessage() {
     const message = dom.aiInput.value.trim();
     if (!message) return;
 
+    const modelId = state.selectedModel;
+    const modelData = AI_MODELS[modelId];
+    const modelName = modelData?.name || modelId;
+
     // Add user message
     appendAiMessage(message, 'user');
     dom.aiInput.value = '';
@@ -538,18 +713,20 @@ async function sendAiMessage() {
     dom.btnAiSend.disabled = true;
 
     try {
-        const response = await puter.ai.chat(message);
+        const response = await puter.ai.chat(message, {
+            model: modelId
+        });
         const aiText = response?.message?.content || response?.toString() || 'Sorry, I could not generate a response.';
-        appendAiMessage(aiText, 'ai');
+        appendAiMessage(aiText, 'ai', modelName);
 
         state.aiQueryCount++;
         dom.statAi.textContent = state.aiQueryCount;
         await puter.kv.set('photon_ai_count', state.aiQueryCount.toString());
 
-        addActivity(`🤖 ${state.user?.username} used AI Assistant`);
+        addActivity(`🤖 ${state.user?.username} used ${modelName}`);
     } catch (e) {
-        appendAiMessage('Sorry, something went wrong. Please try again.', 'ai');
-        showToast('AI request failed.', 'error');
+        appendAiMessage(`Sorry, something went wrong with ${modelName}. The model might not be available. Try a different one!`, 'ai', modelName);
+        showToast(`AI request failed with ${modelName}.`, 'error');
         console.error(e);
     }
 
@@ -559,7 +736,7 @@ async function sendAiMessage() {
     dom.btnAiSend.disabled = false;
 }
 
-function appendAiMessage(text, sender) {
+function appendAiMessage(text, sender, modelName = '') {
     const div = document.createElement('div');
     div.className = `ai-message ${sender === 'user' ? 'user-message' : ''}`;
 
@@ -568,10 +745,16 @@ function appendAiMessage(text, sender) {
         : '🤖';
 
     const formattedText = sender === 'ai' ? formatAiText(text) : escapeHtml(text);
+    const modelTag = sender === 'ai' && modelName
+        ? `<span class="ai-model-tag">⚡ ${modelName}</span>`
+        : '';
 
     div.innerHTML = `
         <div class="ai-avatar">${avatar}</div>
-        <div class="ai-bubble">${formattedText}</div>
+        <div class="ai-bubble">
+            ${formattedText}
+            ${modelTag}
+        </div>
     `;
 
     dom.aiChat.appendChild(div);
@@ -579,7 +762,6 @@ function appendAiMessage(text, sender) {
 }
 
 function formatAiText(text) {
-    // Basic markdown-ish formatting
     let formatted = escapeHtml(text);
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
@@ -602,7 +784,6 @@ async function loadMembers() {
 }
 
 function renderMembers(members) {
-    // Default team display
     const defaultMembers = [
         { name: 'Member 1', role: 'Team Lead', status: 'Leading the charge ⚡' },
         { name: 'Member 2', role: 'Developer', status: 'Writing code 💻' },
@@ -612,7 +793,6 @@ function renderMembers(members) {
         { name: 'Member 6', role: 'Writer', status: 'Crafting stories ✍️' }
     ];
 
-    // Merge saved members with defaults
     const displayMembers = defaultMembers.map((def, i) => {
         const saved = members[i];
         return saved || def;
@@ -685,7 +865,6 @@ async function addActivity(message) {
             timestamp: new Date().toISOString()
         });
 
-        // Keep last 50
         activities = activities.slice(0, 50);
         await puter.kv.set('photon_activity', JSON.stringify(activities));
         renderActivity(activities);
@@ -770,7 +949,6 @@ function createParticles() {
         container.appendChild(particle);
     }
 
-    // Add keyframes
     const style = document.createElement('style');
     style.textContent = `
         @keyframes particleFloat {
